@@ -15,14 +15,8 @@ export default function Home() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    // const SpeechRecognitionConstructor =
-    //   typeof window !== 'undefined' ? (window.SpeechRecognition || (window).webkitSpeechRecognition) : null;
-
     const SpeechRecognitionConstructor =
-      typeof window !== 'undefined'
-        ? (window.SpeechRecognition || (window as Window & { webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition)
-        : null;
-
+      typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
 
     if (SpeechRecognitionConstructor) {
       recognitionRef.current = new SpeechRecognitionConstructor();
@@ -186,7 +180,7 @@ export default function Home() {
             </button>
           </div>
         </div>
-        <Footer />
+      <Footer />
       </div>
     </div>
   );
