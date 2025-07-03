@@ -1,5 +1,3 @@
-// app/api/gemini/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -52,8 +50,12 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ response: output });
-  } catch (err: any) {
-    console.error("❌ Internal Error:", err.message || err);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("❌ Internal Error:", err.message);
+    } else {
+      console.error("❌ Unknown error:", err);
+    }
     return NextResponse.json(
       { response: "Internal server error" },
       { status: 500 }
