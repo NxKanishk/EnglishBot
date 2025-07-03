@@ -1,0 +1,167 @@
+// 'use client';
+
+// import { useEffect, useRef, useState } from 'react';
+
+// export default function Home() {
+//   const [text, setText] = useState(''); // Transcribed user speech
+//   const [botResponse, setBotResponse] = useState(''); // Bot's reply
+//   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]); // Available voices
+//   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null); // Selected voice
+//   const [rate, setRate] = useState(1); // Speech rate
+//   const [isListening, setIsListening] = useState(false); // Microphone state
+
+//   // Reference to SpeechRecognition instance to persist across renders
+//   const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+//   useEffect(() => {
+//     // Initialize speech recognition if available
+//     const SpeechRecognitionConstructor =
+//       typeof window !== 'undefined' ? (window.SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
+
+//     if (SpeechRecognitionConstructor) {
+//       recognitionRef.current = new SpeechRecognitionConstructor();
+//       const recognition = recognitionRef.current;
+
+//       recognition.lang = 'en-US';
+//       recognition.interimResults = false;
+//       recognition.maxAlternatives = 1;
+
+//       recognition.onresult = (event: SpeechRecognitionEvent) => {
+//         const transcript = event.results[0][0].transcript;
+//         setText(transcript);
+//         const response = generateBotResponse(transcript.toLowerCase());
+//         setBotResponse(response);
+//         speakText(response);
+//       };
+
+//       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+//         console.error('Speech recognition error:', event.error);
+//         setIsListening(false);
+//       };
+
+//       recognition.onend = () => {
+//         setIsListening(false);
+//       };
+//     }
+
+//     return () => {
+//       recognitionRef.current?.stop();
+//     };
+//   }, []);
+
+//   // Load available voices and set default
+//   useEffect(() => {
+//     const loadVoices = () => {
+//       const allVoices = window.speechSynthesis.getVoices();
+//       const englishVoices = allVoices.filter((voice) =>
+//         voice.lang.toLowerCase().includes('en')
+//       );
+//       setVoices(englishVoices);
+//       if (englishVoices.length > 0 && !selectedVoice) {
+//         setSelectedVoice(englishVoices[0]);
+//       }
+//     };
+
+//     window.speechSynthesis.onvoiceschanged = loadVoices;
+//     loadVoices();
+
+//     return () => {
+//       window.speechSynthesis.onvoiceschanged = null;
+//     };
+//   }, [selectedVoice]);
+
+//   // Generate bot response based on input
+//   const generateBotResponse = (input: string): string => {
+//     const responses: { [key: string]: string } = {
+//       hi: 'Hello! How can I assist you today?',
+//       hello: 'Hi there! What’s on your mind?',
+//       'how are you': 'I’m doing great, thanks for asking! How about you?',
+//       'what is your name': 'I’m your friendly English Speaker Bot!',
+//       bye: 'Goodbye! Come back anytime.',
+//     };
+//     return responses[input] || 'I’m not sure how to respond to that. Try saying "hi" or "how are you"?';
+//   };
+
+//   // Start speech recognition
+//   const startListening = () => {
+//     if (recognitionRef.current && !isListening) {
+//       setIsListening(true);
+//       recognitionRef.current.start();
+//     }
+//   };
+
+//   // Speak text using selected voice and rate
+//   const speakText = (textToSpeak: string) => {
+//     if (!textToSpeak.trim()) return;
+
+//     const utterance = new SpeechSynthesisUtterance(textToSpeak);
+//     if (selectedVoice) utterance.voice = selectedVoice;
+//     utterance.rate = rate;
+
+//     window.speechSynthesis.cancel(); // Stop previous utterances
+//     window.speechSynthesis.speak(utterance);
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+//       <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md space-y-4">
+//         <h1 className="text-xl font-bold text-center">🗣️ English Speaker Bot</h1>
+
+//         {/* Microphone button */}
+//         <div className="flex justify-center">
+//           <button
+//             onClick={startListening}
+//             disabled={isListening || !recognitionRef.current}
+//             className={`p-4 rounded-full ${
+//               isListening ? 'bg-red-600' : 'bg-blue-600'
+//             } text-white transition hover:${
+//               isListening ? 'bg-red-700' : 'bg-blue-700'
+//             } disabled:bg-gray-400`}
+//           >
+//             {isListening ? '🎙️ Listening...' : '🎙️ Speak'}
+//           </button>
+//         </div>
+
+//         {/* Display transcribed text and bot response */}
+//         <div className="border rounded p-2 h-32 overflow-auto text-sm">
+//           <p><strong>You said:</strong> {text || 'Nothing yet...'}</p>
+//           <p><strong>Bot response:</strong> {botResponse || 'Waiting for your input...'}</p>
+//         </div>
+
+//         {/* Voice selection */}
+//         <div className="flex flex-col space-y-2">
+//           <label>
+//             Voice:
+//             <select
+//               className="w-full mt-1 border rounded p-1"
+//               value={selectedVoice?.name || ''}
+//               onChange={(e) =>
+//                 setSelectedVoice(voices.find((v) => v.name === e.target.value) || null)
+//               }
+//             >
+//               {voices.map((voice) => (
+//                 <option key={voice.name} value={voice.name}>
+//                   {voice.name} ({voice.lang})
+//                 </option>
+//               ))}
+//             </select>
+//           </label>
+
+//           {/* Speech rate control */}
+//           <label>
+//             Speed: {rate.toFixed(1)}
+//             <input
+//               type="range"
+//               min="0.5"
+//               max="2"
+//               step="0.1"
+//               value={rate}
+//               onChange={(e) => setRate(parseFloat(e.target.value))}
+//               className="w-full"
+//             />
+//           </label>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
